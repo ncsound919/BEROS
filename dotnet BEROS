@@ -1,0 +1,27 @@
+dotnet new maui -n BEROS.Mobile
+cd BEROS.Mobile
+
+dotnet add package SkiaSharp.Views.Maui.Controls      # 2D Graphics/Canvas
+dotnet add package SkiaSharp.Views.Maui                # Particles/Sprites
+dotnet add package Microsoft.AspNetCore.SignalR.Client # Multiplayer
+dotnet add package CommunityToolkit.Mvvm               # MVVM (optional)
+
+For 3D/Racing: dotnet add package Raylib-CsLo (OpenGL, tractors/particles).
+Private Server: Separate console app (dotnet new console -n BEROS.Server):textdotnet add package Microsoft.AspNetCore.SignalR
+dotnet run --urls=http://0.0.0.0:5000  # Host on PC (port forward 5000)Friends join via IP:5000/roomcode.
+
+COMPLETE BEROS CODE (Copy-Paste Ready)
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="BEROS.MainPage">
+    <Grid>
+        <skia:SKCanvasView x:Name="GameCanvas" PaintSurface="OnPaint" EnableTouchEvents="True" Touch="OnTouch" />
+        <!-- Virtual Joystick (Bottom Left) -->
+        <Ellipse Fill="White" Stroke="Black" StrokeThickness="2" WidthRequest="100" HeightRequest="100" 
+                 HorizontalOptions="Start" VerticalOptions="End" Opacity="0.7" />
+        <!-- Interact Button (Bottom Right) -->
+        <Button Text="E 🌈" BackgroundColor="Pink" Clicked="OnInteract" HorizontalOptions="End" VerticalOptions="End" />
+        <!-- HUD -->
+        <Label Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Start" FontSize="20" />
+    </Grid>
+</ContentPage>
