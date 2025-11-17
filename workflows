@@ -1,0 +1,48 @@
+# Minimal example CI workflow: Android (ubuntu) build + iOS (macos) build (placeholders below)
+# Replace placeholders: PROJECT_SOLUTION, ANDROID_PROJECT_PATH, IOS_PROJECT_PATH, KEYSTORE secrets, APPLE_CERT secrets
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+      - name: Restore
+        run: dotnet restore
+      - name: Build Android
+        run: dotnet publish ./PROJECT_SOLUTION.sln -c Release -f net8.0-android -o ./artifacts/android --no-restore
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: ./artifacts/android
+
+  build-ios:
+    runs-on: macos-latest
+    needs: build-android
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+      - name: Restore
+        run: dotnet restore
+      - name: Build iOS (simulator)
+        run: dotnet build ./PROJECT_SOLUTION.sln -c Release -f net8.0-ios /p:Platform=iPhoneSimulator --no-restore
+      - name: Archive for device (requires signing, recommended via Fastlane)
+        run: |
+          echo "For device/Ipa creation and App Store upload, use Fastlane on macOS with provisioning/certs."
