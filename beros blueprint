@@ -130,24 +130,24 @@
   },
   "game_mechanics": {
     "movement": {
-      "speed": 5f,
-      "sprint": 1.5f * speed,
-      "touch_deadzone": 0.1f,
+      "speed": 5,
+      "sprint": 7.5,
+      "touch_deadzone": 0.1,
       "code": "player.X += joyX * speed * deltaTime;"
     },
     "farming": {
-      "growth_rate": 0.01f / sec,
-      "watered_accel": 2.0f,
-      "harvest_radius": 80f,
+      "growth_rate": 0.01,
+      "watered_accel": 2.0,
+      "harvest_radius": 80,
       "sparkles_reward": 15,
       "stages": 5,
       "update": "growth += (watered ? accel : 1f) * rate * delta;"
     },
     "racing": {
       "max_players": 8,
-      "boost_recharge": 3f,
+      "boost_recharge": 3,
       "powerups_spawn": "Every 5s random tile",
-      "lap_length": 1000 units,
+      "lap_length": 1000,
       "code": "tractorSpeed = Mathf.Lerp(speed, maxSpeed, accel * 0.1f);"
     },
     "economy": {
