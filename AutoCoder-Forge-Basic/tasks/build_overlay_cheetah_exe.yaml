@@ -1,0 +1,56 @@
+task_id: build_overlay_cheetah_exe
+description: >
+  Build Overlay Cheetah as a standalone Windows executable using PyInstaller.
+  This task generates a build script that packages the launcher, AutoCoder runtime,
+  templates, and tasks into a single portable .exe file that can be distributed
+  and run without Python installation.
+
+author: AutoCoder
+created_by: build_overlay_cheetah_exe_task
+created_at: 2024-10-29T18:00:00Z
+priority: high
+
+files:
+  # 1. PyInstaller spec file for building the exe
+  - template: pyinstaller_overlay_cheetah.spec.j2
+    output: ../../Overlay_Cheetah/overlay_cheetah.spec
+    context:
+      app_name: "OverlayCheetah"
+      script_name: "overlay_cheetah_launcher.py"
+      icon_file: "cheetah.ico"
+      version: "1.0.0"
+      company_name: "Overlay Cheetah"
+      file_description: "Portable AI-Assisted Code Generation System"
+      console: true
+      onefile: true
+
+  # 2. Build script for Windows
+  - template: build_exe.bat.j2
+    output: ../../Overlay_Cheetah/build_exe.bat
+    context:
+      spec_file: "overlay_cheetah.spec"
+      output_name: "OverlayCheetah.exe"
+
+  # 3. README for the exe distribution
+  - template: exe_readme.md.j2
+    output: ../../Overlay_Cheetah/EXE_README.md
+    context:
+      exe_name: "OverlayCheetah.exe"
+      version: "1.0.0"
+      quick_start: true
+
+notes:
+  - After generation, run build_exe.bat to create the standalone executable
+  - The exe will be in Overlay_Cheetah/dist/OverlayCheetah.exe
+  - Bundle includes all templates, tasks, and AutoCoder runtime
+  - Requires PyInstaller: pip install pyinstaller
+  - Exe can be distributed as a single file with the EXE_README.md
+
+post_build_steps:
+  - Install PyInstaller if needed: pip install pyinstaller
+  - Run: cd Overlay_Cheetah && build_exe.bat
+  - Test the exe: dist\OverlayCheetah.exe
+  - Zip dist\OverlayCheetah.exe + EXE_README.md for distribution
+
+completion_target: "Portable exe ready for distribution"
+estimated_time: "5 seconds generation + 30 seconds build"

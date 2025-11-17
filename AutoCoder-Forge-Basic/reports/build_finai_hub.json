@@ -1,0 +1,21 @@
+{
+  "task_id": "build_finai_hub",
+  "generated": [
+    "../../apps/api/routers/kronos.py",
+    "../../apps/api/routers/docsgpt.py",
+    "../../apps/api/routers/goose.py",
+    "../../apps/api/routers/laddr.py",
+    "../../apps/api/routers/vutuv.py",
+    "../../apps/api/main.py",
+    "../../docker-compose.yml",
+    "../../Dockerfile.backend",
+    "../../Dockerfile.frontend",
+    "../../Makefile"
+  ],
+  "errors": [
+    {
+      "file": "../../pytest.ini",
+      "error": "'markers' is undefined"
+    }
+  ]
+}

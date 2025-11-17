@@ -1,0 +1,311 @@
+# -*- coding: utf-8 -*-
+import pygame
+import random
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+BLOCK_SIZE = 30
+GRID_WIDTH = 10
+GRID_HEIGHT = 20
+GRID_OFFSET_X = (SCREEN_WIDTH - GRID_WIDTH * BLOCK_SIZE) // 2
+GRID_OFFSET_Y = 50
+
+# Colors (Urban theme)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+DARK_GRAY = (64, 64, 64)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+PURPLE = (128, 0, 128)
+CYAN = (0, 255, 255)
+ORANGE = (255, 165, 0)
+
+# Tetris shapes
+SHAPES = [
+    [
+        [".....", ".....", ".....", "OOOO.", "....."],
+        [".....", "..O..", "..O..", "..O..", "..O.."],
+    ],
+    [
+        [".....", ".....", "..O..", ".OOO.", "....."],
+        [".....", "..O..", "..OO.", "..O..", "....."],
+        [".....", ".....", ".OOO.", "..O..", "....."],
+        [".....", "..O..", ".OO..", "..O..", "....."],
+    ],
+    [
+        [".....", ".....", "..OO.", ".OO..", "....."],
+        [".....", "..O..", "..OO.", "...O.", "....."],
+    ],
+    [
+        [".....", ".....", ".OO..", "..OO.", "....."],
+        [".....", "...O.", "..OO.", "..O..", "....."],
+    ],
+    [[".....", ".....", ".OO..", ".OO..", "....."]],
+    [
+        [".....", ".....", "OOOO.", ".....", "....."],
+        [".....", "..O..", "..O..", "..O..", "..O.."],
+    ],
+    [
+        [".....", ".....", "..O..", "..O..", "..OO."],
+        [".....", ".....", ".OO..", "..O..", "..O.."],
+        [".....", ".....", ".OO..", "..O..", "..O.."],
+        [".....", ".....", "..O..", "..O..", ".OO.."],
+    ],
+]
+
+SHAPE_COLORS = [CYAN, BLUE, ORANGE, YELLOW, GREEN, PURPLE, RED]
+
+# Set up the display
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Urban Block Stack")
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 36)
+
+
+class Grid:
+    def __init__(self):
+        self.grid = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+        self.colors = [[BLACK for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+
+    def is_valid_position(self, piece, adj_x=0, adj_y=0):
+        for y, row in enumerate(piece.shape):
+            for x, cell in enumerate(row):
+                if cell:
+                    new_x = piece.x + x + adj_x
+                    new_y = piece.y + y + adj_y
+                    if new_x < 0 or new_x >= GRID_WIDTH or new_y >= GRID_HEIGHT:
+                        return False
+                    if new_y >= 0 and self.grid[new_y][new_x]:
+                        return False
+        return True
+
+    def place_piece(self, piece):
+        for y, row in enumerate(piece.shape):
+            for x, cell in enumerate(row):
+                if cell:
+                    self.grid[piece.y + y][piece.x + x] = 1
+                    self.colors[piece.y + y][piece.x + x] = piece.color
+
+    def clear_lines(self):
+        lines_cleared = 0
+        for y in range(GRID_HEIGHT - 1, -1, -1):
+            if all(self.grid[y]):
+                del self.grid[y]
+                del self.colors[y]
+                self.grid.insert(0, [0 for _ in range(GRID_WIDTH)])
+                self.colors.insert(0, [BLACK for _ in range(GRID_WIDTH)])
+                lines_cleared += 1
+        return lines_cleared
+
+    def draw(self, screen):
+        for y in range(GRID_HEIGHT):
+            for x in range(GRID_WIDTH):
+                pygame.draw.rect(
+                    screen,
+                    self.colors[y][x],
+                    (
+                        GRID_OFFSET_X + x * BLOCK_SIZE,
+                        GRID_OFFSET_Y + y * BLOCK_SIZE,
+                        BLOCK_SIZE,
+                        BLOCK_SIZE,
+                    ),
+                    0,
+                )
+                pygame.draw.rect(
+                    screen,
+                    GRAY,
+                    (
+                        GRID_OFFSET_X + x * BLOCK_SIZE,
+                        GRID_OFFSET_Y + y * BLOCK_SIZE,
+                        BLOCK_SIZE,
+                        BLOCK_SIZE,
+                    ),
+                    1,
+                )
+
+
+class Piece:
+    def __init__(self, x, y, shape, color):
+        self.x = x
+        self.y = y
+        self.shape = shape
+        self.color = color
+        self.rotation = 0
+
+    def rotate(self):
+        self.shape = list(zip(*self.shape[::-1]))
+
+
+def create_piece():
+    shape_idx = random.randint(0, len(SHAPES) - 1)
+    return Piece(GRID_WIDTH // 2 - 2, 0, SHAPES[shape_idx][0], SHAPE_COLORS[shape_idx])
+
+
+def draw_piece(screen, piece, ghost=False):
+    color = piece.color if not ghost else GRAY
+    for y, row in enumerate(piece.shape):
+        for x, cell in enumerate(row):
+            if cell:
+                pygame.draw.rect(
+                    screen,
+                    color,
+                    (
+                        GRID_OFFSET_X + (piece.x + x) * BLOCK_SIZE,
+                        GRID_OFFSET_Y + (piece.y + y) * BLOCK_SIZE,
+                        BLOCK_SIZE,
+                        BLOCK_SIZE,
+                    ),
+                    0,
+                )
+                pygame.draw.rect(
+                    screen,
+                    WHITE,
+                    (
+                        GRID_OFFSET_X + (piece.x + x) * BLOCK_SIZE,
+                        GRID_OFFSET_Y + (piece.y + y) * BLOCK_SIZE,
+                        BLOCK_SIZE,
+                        BLOCK_SIZE,
+                    ),
+                    1,
+                )
+
+
+def main():
+    grid = Grid()
+    current_piece = create_piece()
+    next_piece = create_piece()
+    fall_time = 0
+    fall_speed = 500  # milliseconds
+    score = 0
+    level = 1
+    lines_cleared = 0
+
+    running = True
+    while running:
+        fall_time += clock.get_rawtime()
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    if grid.is_valid_position(current_piece, -1, 0):
+                        current_piece.x -= 1
+                elif event.key == pygame.K_RIGHT:
+                    if grid.is_valid_position(current_piece, 1, 0):
+                        current_piece.x += 1
+                elif event.key == pygame.K_DOWN:
+                    if grid.is_valid_position(current_piece, 0, 1):
+                        current_piece.y += 1
+                        score += 1
+                elif event.key == pygame.K_UP:
+                    current_piece.rotate()
+                    if not grid.is_valid_position(current_piece):
+                        current_piece.rotate()  # Rotate back if invalid
+
+        if fall_time >= fall_speed:
+            fall_time = 0
+            if grid.is_valid_position(current_piece, 0, 1):
+                current_piece.y += 1
+            else:
+                grid.place_piece(current_piece)
+                lines = grid.clear_lines()
+                lines_cleared += lines
+                score += lines * 100 * level
+                level = lines_cleared // 10 + 1
+                fall_speed = max(50, 500 - (level - 1) * 50)
+                current_piece = next_piece
+                next_piece = create_piece()
+                if not grid.is_valid_position(current_piece):
+                    running = False
+
+        # Draw
+        screen.fill(BLACK)
+
+        # Draw grid background (city skyline)
+        pygame.draw.rect(
+            screen,
+            DARK_GRAY,
+            (
+                GRID_OFFSET_X,
+                GRID_OFFSET_Y,
+                GRID_WIDTH * BLOCK_SIZE,
+                GRID_HEIGHT * BLOCK_SIZE,
+            ),
+        )
+
+        grid.draw(screen)
+        draw_piece(screen, current_piece)
+
+        # Draw next piece
+        next_text = font.render("Next:", True, WHITE)
+        screen.blit(
+            next_text, (GRID_OFFSET_X + GRID_WIDTH * BLOCK_SIZE + 50, GRID_OFFSET_Y)
+        )
+        for y, row in enumerate(next_piece.shape):
+            for x, cell in enumerate(row):
+                if cell:
+                    pygame.draw.rect(
+                        screen,
+                        next_piece.color,
+                        (
+                            GRID_OFFSET_X
+                            + GRID_WIDTH * BLOCK_SIZE
+                            + 50
+                            + x * BLOCK_SIZE,
+                            GRID_OFFSET_Y + 50 + y * BLOCK_SIZE,
+                            BLOCK_SIZE,
+                            BLOCK_SIZE,
+                        ),
+                        0,
+                    )
+                    pygame.draw.rect(
+                        screen,
+                        WHITE,
+                        (
+                            GRID_OFFSET_X
+                            + GRID_WIDTH * BLOCK_SIZE
+                            + 50
+                            + x * BLOCK_SIZE,
+                            GRID_OFFSET_Y + 50 + y * BLOCK_SIZE,
+                            BLOCK_SIZE,
+                            BLOCK_SIZE,
+                        ),
+                        1,
+                    )
+
+        # UI
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        level_text = font.render(f"Level: {level}", True, WHITE)
+        lines_text = font.render(f"Lines: {lines_cleared}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+        screen.blit(level_text, (10, 50))
+        screen.blit(lines_text, (10, 90))
+
+        pygame.display.flip()
+
+    # Game over
+    screen.fill(BLACK)
+    game_over_text = font.render("Game Over", True, WHITE)
+    final_score_text = font.render(f"Final Score: {score}", True, WHITE)
+    screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50))
+    screen.blit(final_score_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2))
+    pygame.display.flip()
+    pygame.time.wait(3000)
+
+    pygame.quit()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    main()

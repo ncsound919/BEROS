@@ -1,0 +1,67 @@
+task_id: build_carlton_model_exe
+description: >
+  Build Carlton Model as a standalone Windows executable using dotnet publish.
+  Generates a .csproj file for the C# project and a build script to create a self-contained exe.
+
+author: AutoCoder
+created_by: build_carlton_model_exe_task
+created_at: 2024-10-30T12:00:00Z
+priority: high
+
+files:
+  # 1. .csproj file for the C# project
+  - template: csproj.j2
+    output: ../../../Overlay Music/Carlton Model/CarltonModel.csproj
+    context:
+      project_name: "CarltonModel"
+      target_framework: "net8.0-windows"
+      output_type: "WinExe"
+      main_file: "Program.cs"
+      references:
+        - "System"
+        - "System.Windows.Forms"
+        - "System.Drawing"
+        - "Melanchall.DryWetMidi"
+      packages:
+        - name: "Melanchall.DryWetMidi"
+          version: "6.1.0"
+      files:
+        - "Program.cs"
+        - "GuiMainForm.cs"
+        - "ModelRunner.cs"
+        - "MidiPlayback.cs"
+        - "MidiWriter.cs"
+        - "ChordExporter.cs"
+        - "CarltonGPT_Music_Foundation.txt"
+
+  # 2. Build script for Windows using dotnet
+  - template: build_csharp_exe.bat.j2
+    output: ../../../Overlay Music/Carlton Model/build_exe.bat
+    context:
+      project_file: "CarltonModel.csproj"
+      output_dir: "bin/Release/net8.0-windows/win-x64/publish"
+      exe_name: "CarltonModel.exe"
+
+  # 3. README for the exe
+  - template: exe_readme.md.j2
+    output: ../../../Overlay Music/Carlton Model/EXE_README.md
+    context:
+      exe_name: "CarltonModel.exe"
+      version: "1.0.0"
+      quick_start: true
+
+notes:
+  - After generation, run build_exe.bat to create the standalone executable
+  - The exe will be in Carlton Model/bin/Release/net8.0-windows/win-x64/publish/CarltonModel.exe
+  - Requires .NET 8.0 SDK installed
+  - Exe is self-contained and can be distributed
+  - Includes all dependencies
+
+post_build_steps:
+  - Install .NET 8.0 SDK if needed
+  - Run: cd Carlton Model && build_exe.bat
+  - Test the exe: bin\Release\net8.0-windows\win-x64\publish\CarltonModel.exe
+  - Zip the publish folder for distribution
+
+completion_target: "Standalone exe ready for distribution"
+estimated_time: "5 seconds generation + 30 seconds build"

@@ -1,0 +1,32 @@
+using Fusion;
+using UnityEngine;
+
+public class RaceManager : NetworkBehaviour
+{
+    [Networked] public bool RaceStarted { get; set; }
+    public string RoomPassword; // Set in UI for private access
+
+    public override void Spawned()
+    {
+        if (Runner.IsServer)
+        {
+            // Private room: Only join if password matches (check on connect)
+            Runner.SessionInfo.IsVisible = false; // Hidden lobby
+            Runner.SessionInfo.IsOpen = false;    // Closed to public
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_StartPrivateRace(string password)
+    {
+        if (password == RoomPassword)
+        {
+            RaceStarted = true;
+            // Notify clients
+        }
+        else
+        {
+            RPC_SendError("Wrong room code!");
+        }
+    }
+}

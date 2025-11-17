@@ -1,0 +1,11 @@
+{
+  "task_id": "build_finai_hub_exe",
+  "generated": [
+    "../../finai_hub_app.py",
+    "../../finai_backend.py",
+    "../../build_exe.py",
+    "../../requirements.txt",
+    "../../FinAI_Hub_README.md"
+  ],
+  "errors": []
+}

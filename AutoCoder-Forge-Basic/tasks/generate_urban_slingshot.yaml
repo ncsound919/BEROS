@@ -1,0 +1,21 @@
+task_id: generate_urban_slingshot
+files:
+  - template: pygame_slingshot_main.py.j2
+    output: urban_slingshot/main.py
+    context:
+      game_name: "Urban Slingshot Fury"
+  - template: pygame_game.spec.j2
+    output: urban_slingshot/build.spec
+    context:
+      app_name: "UrbanSlingshotFury"
+      script_name: "main.py"
+      file_description: "Urban hip-hop themed slingshot game"
+      console: false
+      onefile: true
+      game_dir: "C:\\Users\\tap45\\Documents\\Overlay Projects\\Overlay Open Source\\AutoCoder-Forge-Basic\\out\\urban_slingshot"
+  - template: game_readme.md.j2
+    output: urban_slingshot/README.md
+    context:
+      project_name: "Urban Slingshot Fury"
+      description: "An urban hip-hop themed slingshot game where you launch projectiles at city targets to cause chaos and earn points."
+build_command: "C:\\Users\\tap45\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\pyinstaller.exe \"C:\\Users\\tap45\\Documents\\Overlay Projects\\Overlay Open Source\\AutoCoder-Forge-Basic\\out\\urban_slingshot\\build.spec\""

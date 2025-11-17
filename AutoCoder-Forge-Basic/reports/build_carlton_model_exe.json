@@ -1,0 +1,9 @@
+{
+  "task_id": "build_carlton_model_exe",
+  "generated": [
+    "../../../Overlay Music/Carlton Model/CarltonModel.csproj",
+    "../../../Overlay Music/Carlton Model/build_exe.bat",
+    "../../../Overlay Music/Carlton Model/EXE_README.md"
+  ],
+  "errors": []
+}

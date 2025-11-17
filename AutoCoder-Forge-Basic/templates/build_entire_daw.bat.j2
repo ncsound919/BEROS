@@ -1,0 +1,111 @@
+@echo off
+title Tap-DAW Complete Marathon Build
+color 0A
+
+echo.
+echo  ╔════════════════════════════════════════╗
+echo  ║   TAP-DAW MARATHON BUILD SYSTEM       ║
+echo  ║   AutoCoder Generated                 ║
+echo  ╚════════════════════════════════════════╝
+echo.
+echo  Building all 9 phases of Tap-DAW
+echo  Estimated time: 60 minutes
+echo.
+
+timeout /t 3 /nobreak >nul
+
+REM Install dependencies
+echo [░░░░░░░░░░] Installing dependencies...
+py -m pip install -q networkx anthropic pydantic fastapi uvicorn requests aiofiles >nul 2>&1
+
+echo [████░░░░░░] Using AutoCoder for build process...
+
+echo [████████░░] Building Phase 1...
+cd phases/daw_phase_1_session_core
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 2...
+cd phases/02_media_io
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 3...
+cd phases/ss
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 4...
+cd phases/04_playback
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 5...
+cd phases/05_editing
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 6...
+cd phases/06_midi
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 7...
+cd phases/07_fl_midi
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 8...
+cd phases/08_effects
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [████████░░] Building Phase 9...
+cd phases/09_clap_host
+rmdir /s /q build 2>nul
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+cd ..\..
+
+echo [██████████] COMPLETE!
+echo.
+echo  ✓ Your complete Tap-DAW is ready!
+echo.
+echo  Launch Phase 1: phases\daw_phase_1_session_core\build\Release\TapDAW_Phase1.exe
+echo  All phases built in Release mode.
+echo.
+pause

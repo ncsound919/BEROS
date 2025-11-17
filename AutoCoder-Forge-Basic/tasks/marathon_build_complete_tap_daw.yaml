@@ -1,0 +1,27 @@
+task_id: marathon_build_complete_tap_daw
+description: >
+  Marathon build to complete the entire Tap-DAW system in one run.
+  Generates a comprehensive build script that uses Hyper-AHS to create all 9 phases,
+  then builds each phase with CMake into Release executables.
+
+author: AutoCoder
+created_by: marathon_build_complete_tap_daw_task
+created_at: 2024-10-29T15:00:00Z
+priority: high
+
+files:
+  # 1. Marathon build script for entire DAW
+  - template: build_entire_daw.bat.j2
+    output: ../../BUILD_ENTIRE_DAW.bat
+    context: {}
+
+notes:
+  - Generates a single build script that handles all 9 DAW phases
+  - After generation, run BUILD_ENTIRE_DAW.bat to build the complete DAW
+  - Requires Hyper-AHS in c:\Users\tap45\OneDrive\Desktop\stuff\hyper-ahs
+  - Builds all phases in Release configuration
+  - Estimated build time: 60 minutes
+  - Final output: 9 executable DAW phases ready to use
+
+completion_target: "100%"
+estimated_time: "5 seconds generation + 60 minutes build"

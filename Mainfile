@@ -1,0 +1,110 @@
+using SkiaSharp;
+using SkiaSharp.Views.Maui;
+using Microsoft.AspNetCore.SignalR.Client;
+using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace BEROS;
+
+public partial class MainPage : ContentPage, INotifyPropertyChanged
+{
+    private HubConnection _hub;
+    private SKCanvasView _canvas;
+    private Player _player = new();
+    private List<FarmPlot> _plots = new();
+    private bool _inRace = false;
+    private float _touchX, _touchY; // Joystick
+
+    public string Status { get => $"Sparkles: {_player.Sparkles} | Zone: {_player.Zone}"; }
+
+    public MainPage()
+    {
+        InitializeComponent();
+        _canvas = GameCanvas;
+        Loaded += async (s, e) => await ConnectMultiplayer();
+        _canvas.PaintSurface += OnPaintSurface;
+    }
+
+    private async Task ConnectMultiplayer()
+    {
+        _hub = new HubConnectionBuilder().WithUrl("http://YOUR-PC-IP:5000/beros").Build();
+        _hub.On<string>("UpdateState", (state) => Dispatcher.Dispatch(() => UpdateFromServer(state)));
+        await _hub.StartAsync();
+        await _hub.InvokeAsync("JoinRoom", "GUMMY123"); // Private room code
+    }
+
+    private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.SkyBlue);
+
+        // Draw Farm Plots (Rainbow Soil)
+        foreach (var plot in _plots)
+        {
+            canvas.DrawRect(plot.Bounds, plot.Paint); // Growth anim
+            if (plot.IsReady) canvas.DrawText("🍎", plot.Center, plot.TextPaint);
+        }
+
+        // Draw Player (Gummy Bear)
+        _player.Update(_touchX, _touchY, _inRace); // WASD -> Touch
+        canvas.DrawCircle(_player.Position, 20, _player.Paint);
+
+        // Particles (Watering)
+        foreach (var p in _player.Particles) canvas.DrawCircle(p, 3, SKColors.Rainbow);
+
+        // Racing: Rainbow Road
+        if (_inRace) DrawRacetrack(canvas);
+
+        _canvas.InvalidateSurface();
+    }
+
+    private void OnTouch(object sender, SKTouchEventArgs e)
+    {
+        _touchX = e.Location.X / 100f - 0.5f; // Joystick vector
+        _touchY = e.Location.Y / 100f - 0.5f;
+        if (Distance(_player.Position, e.Location) < 50) _player.Interact(_plots);
+    }
+
+    private void OnInteract(object sender, EventArgs e) => _player.WaterNearby(_plots);
+
+    // Server Sync (Racing Positions, Shared Farms)
+    private void UpdateFromServer(string jsonState) { /* Deserialize & sync */ }
+
+    // Helper: Vector math, etc.
+    private float Distance(SKPoint a, SKPoint b) => (float)Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
+}
+
+public class Player : ObservableObject
+{
+    public SKPaint Paint { get; } = new() { Color = SKColors.Brown, Style = SKPaintStyle.Fill };
+    public SKPoint Position { get; set; } = new(100, 100);
+    public List<SKPoint> Particles = new();
+    public int Sparkles { get => GetValue<int>(); set => SetProperty(value); }
+    public string Zone { get => GetValue<string>(); set => SetProperty(value); }
+
+    public void Update(float joyX, float joyY, bool racing)
+    {
+        Position.X += joyX * 5; Position.Y += joyY * 5; // Movement
+        if (racing) Position.X += 2; // Tractor boost
+        // Particles.Update(); // Rainbow trails
+    }
+
+    public void WaterNearby(List<FarmPlot> plots)
+    {
+        var nearby = plots.FirstOrDefault(p => Distance(p.Center, Position) < 100);
+        if (nearby != null) { nearby.Grow(2f); SpawnParticles(nearby.Center); Sparkles += 15; }
+    }
+
+    private void SpawnParticles(SKPoint pos) { /* Add 10 rainbow particles */ }
+}
+
+public class FarmPlot
+{
+    public SKRect Bounds { get; set; } = new(50, 50, 150, 150);
+    public SKPaint Paint { get; } = new() { Color = SKColors.RainbowGradient }; // Procedural
+    public SKPoint Center => new((Bounds.Left + Bounds.Right) / 2, (Bounds.Top + Bounds.Bottom) / 2);
+    public SKPaint TextPaint { get; } = new() { Color = SKColors.Red, TextSize = 40 };
+    public float Growth { get; private set; } = 0f;
+    public bool IsReady => Growth >= 1f;
+
+    public void Grow(float accel) => Growth = Math.Min(1f, Growth + 0.01f * accel);
+}

@@ -1,0 +1,19 @@
+extends StaticBody2D
+
+# Target script for Urban Slingshot Fury
+
+@export var health = 100
+signal destroyed
+
+func _ready():
+    add_to_group("targets")
+
+func take_damage(amount):
+    health -= amount
+    if health <= 0:
+        destroy()
+
+func destroy():
+    emit_signal("destroyed")
+    # Add explosion or destruction animation
+    queue_free()

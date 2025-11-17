@@ -1,0 +1,222 @@
+import pygame
+import random
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
+GRAVITY = 0.5
+JUMP_STRENGTH = -12
+PLAYER_SPEED = 5
+
+# Colors (Urban theme)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+DARK_GRAY = (64, 64, 64)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+PURPLE = (128, 0, 128)  # For hip-hop vibe
+
+# Set up the display
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Urban Beats Platformer")
+clock = pygame.time.Clock()
+
+# Font
+font = pygame.font.SysFont(None, 36)
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((30, 30))
+        self.image.fill(PURPLE)  # Hip-hop purple
+        self.rect = self.image.get_rect()
+        self.rect.x = 100
+        self.rect.y = SCREEN_HEIGHT - 100
+        self.vel_x = 0
+        self.vel_y = 0
+        self.on_ground = False
+        self.lives = 3
+        self.score = 0
+
+    def update(self, platforms):
+        # Gravity
+        self.vel_y += GRAVITY
+        self.rect.y += self.vel_y
+
+        # Horizontal movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.vel_x = -PLAYER_SPEED
+        elif keys[pygame.K_RIGHT]:
+            self.vel_x = PLAYER_SPEED
+        else:
+            self.vel_x = 0
+
+        self.rect.x += self.vel_x
+
+        # Collision with platforms
+        self.on_ground = False
+        for platform in platforms:
+            if self.rect.colliderect(platform.rect):
+                if self.vel_y > 0 and self.rect.bottom > platform.rect.top:
+                    self.rect.bottom = platform.rect.top
+                    self.vel_y = 0
+                    self.on_ground = True
+                elif self.vel_y < 0 and self.rect.top < platform.rect.bottom:
+                    self.rect.top = platform.rect.bottom
+                    self.vel_y = 0
+
+        # Screen boundaries
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top < 0:
+            self.rect.top = 0
+
+    def jump(self):
+        if self.on_ground:
+            self.vel_y = JUMP_STRENGTH
+
+
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.Surface((width, height))
+        self.image.fill(DARK_GRAY)  # Building color
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((25, 25))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.direction = 1
+        self.speed = 2
+
+    def update(self):
+        self.rect.x += self.direction * self.speed
+        if self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
+            self.direction *= -1
+
+
+class Collectible(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((15, 15))
+        self.image.fill(YELLOW)  # Beat collectible
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+def create_level():
+    platforms = pygame.sprite.Group()
+    enemies = pygame.sprite.Group()
+    collectibles = pygame.sprite.Group()
+
+    # Ground
+    platforms.add(Platform(0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50))
+
+    # Rooftops
+    platforms.add(Platform(200, 450, 150, 20))
+    platforms.add(Platform(400, 350, 150, 20))
+    platforms.add(Platform(600, 250, 150, 20))
+
+    # Enemies
+    enemies.add(Enemy(250, 420))
+    enemies.add(Enemy(450, 320))
+    enemies.add(Enemy(650, 220))
+
+    # Collectibles
+    collectibles.add(Collectible(250, 430))
+    collectibles.add(Collectible(450, 330))
+    collectibles.add(Collectible(650, 230))
+
+    return platforms, enemies, collectibles
+
+
+def main():
+    player = Player()
+    platforms, enemies, collectibles = create_level()
+
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(player)
+    all_sprites.add(platforms)
+    all_sprites.add(enemies)
+    all_sprites.add(collectibles)
+
+    running = True
+    while running:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.jump()
+
+        # Update
+        player.update(platforms)
+        enemies.update()
+
+        # Check collisions
+        if pygame.sprite.spritecollide(player, enemies, False):
+            player.lives -= 1
+            if player.lives <= 0:
+                running = False
+            else:
+                player.rect.x = 100
+                player.rect.y = SCREEN_HEIGHT - 100
+                player.vel_y = 0
+
+        collected = pygame.sprite.spritecollide(player, collectibles, True)
+        player.score += len(collected) * 10
+
+        # Draw
+        screen.fill(BLACK)  # Night sky
+
+        # Draw buildings in background
+        pygame.draw.rect(screen, GRAY, (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - 50))
+
+        all_sprites.draw(screen)
+
+        # UI
+        score_text = font.render(f"Score: {player.score}", True, WHITE)
+        lives_text = font.render(f"Lives: {player.lives}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+        screen.blit(lives_text, (10, 50))
+
+        pygame.display.flip()
+
+    # Game over
+    screen.fill(BLACK)
+    game_over_text = font.render("Game Over", True, WHITE)
+    final_score_text = font.render(f"Final Score: {player.score}", True, WHITE)
+    screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50))
+    screen.blit(final_score_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2))
+    pygame.display.flip()
+    pygame.time.wait(3000)
+
+    pygame.quit()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    main()

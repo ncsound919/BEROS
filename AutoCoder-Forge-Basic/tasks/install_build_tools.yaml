@@ -1,0 +1,25 @@
+task_id: install_build_tools
+description: >
+  Generate an installation script for build tools required for Tap-DAW compilation.
+  Installs CMake, MinGW, Git, and ensures proper PATH setup for building all phases.
+
+author: AutoCoder
+created_by: install_build_tools_task
+created_at: 2024-10-29T16:00:00Z
+priority: high
+
+files:
+  # 1. Build tools installation script
+  - template: install_build_tools.bat.j2
+    output: ../../INSTALL_BUILD_TOOLS.bat
+    context: {}
+
+notes:
+  - Generates a script that uses winget to install CMake, MinGW, and Git
+  - If winget is not available, provides manual download links
+  - After installation, restart command prompt and run BUILD_ENTIRE_DAW.bat
+  - Ensures all build tools are available with alternatives (MinGW as primary, VS as backup)
+  - AutoCoder handles the installation to prevent build stops
+
+completion_target: "Build tools installed and ready"
+estimated_time: "5 seconds generation + 10 minutes installation"

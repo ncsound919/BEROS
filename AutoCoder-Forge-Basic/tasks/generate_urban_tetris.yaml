@@ -1,0 +1,21 @@
+task_id: generate_urban_tetris
+files:
+  - template: pygame_tetris_main.py.j2
+    output: urban_tetris/main.py
+    context:
+      game_name: "Urban Block Stack"
+  - template: pygame_game.spec.j2
+    output: urban_tetris/build.spec
+    context:
+      app_name: "UrbanBlockStack"
+      script_name: "main.py"
+      file_description: "Urban hip-hop themed Tetris game"
+      console: false
+      onefile: true
+      game_dir: "C:\\Users\\tap45\\Documents\\Overlay Projects\\Overlay Open Source\\AutoCoder-Forge-Basic\\out\\urban_tetris"
+  - template: game_readme.md.j2
+    output: urban_tetris/README.md
+    context:
+      project_name: "Urban Block Stack"
+      description: "An urban hip-hop themed Tetris game where you stack blocks to build skyscrapers and create beats."
+build_command: "C:\\Users\\tap45\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\pyinstaller.exe \"C:\\Users\\tap45\\Documents\\Overlay Projects\\Overlay Open Source\\AutoCoder-Forge-Basic\\out\\urban_tetris\\build.spec\""

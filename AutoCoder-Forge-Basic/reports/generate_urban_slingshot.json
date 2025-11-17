@@ -1,0 +1,14 @@
+{
+  "task_id": "generate_urban_slingshot",
+  "generated": [
+    "urban_slingshot/main.py",
+    "urban_slingshot/README.md"
+  ],
+  "errors": [
+    {
+      "file": "urban_slingshot/build.spec",
+      "error": "'icon_file' is undefined"
+    }
+  ],
+  "build_result": 1
+}

@@ -1,0 +1,75 @@
+task_id: build_finai_hub_exe
+description: >
+  Build FinAI Hub as a standalone Windows executable with sophisticated financial analytics frontend.
+  Generates Streamlit-based UI with advanced charts, Kronos predictions, document analysis, and PyInstaller packaging.
+
+author: AutoCoder
+created_by: finai_hub_exe_build
+created_at: 2024-10-30T14:00:00Z
+priority: high
+
+files:
+  # 1. Main Streamlit frontend app
+  - template: finai_streamlit_app.py.j2
+    output: ../../finai_hub_app.py
+    context:
+      title: "FinAI Hub - Advanced Financial Analytics"
+      kronos_endpoint: "http://localhost:8000/api/v1/kronos"
+      docsgpt_endpoint: "http://localhost:8000/api/v1/docsgpt"
+      goose_endpoint: "http://localhost:8000/api/v1/goose"
+      laddr_endpoint: "http://localhost:8000/api/v1/laddr"
+      vutuv_endpoint: "http://localhost:8000/api/v1/vutuv"
+
+  # 2. Backend API server (FastAPI)
+  - template: finai_backend_server.py.j2
+    output: ../../finai_backend.py
+    context:
+      host: "localhost"
+      port: 8000
+      kronos_model: "NeoQuasar/Kronos-small"
+      docsgpt_url: "http://localhost:5001"
+      goose_url: "http://localhost:3000"
+
+  # 3. PyInstaller build script
+  - template: build_finai_exe.py.j2
+    output: ../../build_exe.py
+    context:
+      app_name: "FinAI_Hub"
+      main_script: "finai_hub_app.py"
+      backend_script: "finai_backend.py"
+      output_dir: "dist"
+      icon_path: "icon.ico"  # Optional
+
+  # 4. Requirements file
+  - template: finai_requirements.txt.j2
+    output: ../../requirements.txt
+    context:
+      include_kronos: true
+      include_docsgpt: true
+      include_streamlit: true
+      include_plotly: true
+      include_pandas: true
+      include_fastapi: true
+
+  # 5. README for the EXE
+  - template: finai_exe_readme.md.j2
+    output: ../../FinAI_Hub_README.md
+    context:
+      exe_name: "FinAI_Hub.exe"
+      features:
+        - "Advanced financial market predictions with Kronos AI"
+        - "Document analysis for financial reports"
+        - "Automated workflow management"
+        - "Investment ladder progression"
+        - "Social networking for investors"
+        - "Real-time charts and analytics"
+
+notes:
+  - Generates complete standalone EXE with embedded backend
+  - Frontend uses Streamlit with sophisticated financial visualizations
+  - Requires PyInstaller: pip install pyinstaller
+  - Run build_exe.py to create the EXE
+  - EXE will be in dist/FinAI_Hub.exe
+
+completion_target: "100%"
+estimated_time: "45 seconds generation + 5 minutes build"

@@ -1,0 +1,155 @@
+# Auto-generated session endpoint
+# Jinja template variables:
+#  - router_prefix: prefix for the APIRouter (default "/session")
+#  - redis_session_prefix: redis key prefix for sessions (default "session:")
+#  - redis_log_prefix: redis key prefix for logs (default "log:")
+#  - default_ttl: default TTL (seconds) for session storage (default 1800)
+#
+# Example render context:
+#  {
+#    "router_prefix": "/session",
+#    "redis_session_prefix": "session:",
+#    "redis_log_prefix": "log:",
+#    "default_ttl": 1800
+#  }
+
+from typing import Optional, Dict, Any, List
+import json
+import time
+
+from fastapi import APIRouter, Request, HTTPException, Body
+from pydantic import BaseModel, Field
+
+router = APIRouter(prefix="{{ router_prefix | default('/session') }}", tags=["session"])
+
+REDIS_SESSION_PREFIX = "{{ redis_session_prefix | default('session:') }}"
+REDIS_LOG_PREFIX = "{{ redis_log_prefix | default('log:') }}"
+DEFAULT_TTL = int({{ default_ttl | default(1800) }})
+
+
+class SessionModel(BaseModel):
+    session_id: str = Field(..., description="Unique session identifier")
+    protocol_id: Optional[str] = Field(None, description="Protocol id handling this session")
+    node: Optional[str] = Field(None, description="Current protocol node")
+    fields: Dict[str, Any] = Field(default_factory=dict, description="Collected fields")
+    transcript: List[Dict[str, Any]] = Field(default_factory=list, description="Conversation transcript")
+    route_key: Optional[str] = Field(None, description="Resolved route key")
+    updated_ts: Optional[float] = Field(None, description="Last update timestamp")
+
+
+class LogEntry(BaseModel):
+    event: str
+    data: Optional[Dict[str, Any]] = None
+    ts: Optional[float] = None
+
+
+def _session_key(sid: str) -> str:
+    return f"{REDIS_SESSION_PREFIX}{sid}"
+
+
+def _log_key(sid: str) -> str:
+    return f"{REDIS_LOG_PREFIX}{sid}"
+
+
+@router.get("/get", response_model=Dict[str, Any])
+async def get_session(request: Request, session_id: str):
+    """
+    Retrieve a session object by session_id.
+    Returns 200 with the session JSON if found, otherwise returns a minimal object
+    (to keep UI resilient) with 200, and 404 if you prefer strict behavior.
+    """
+    r = request.app.state.redis
+    key = _session_key(session_id)
+    raw = r.get(key)
+    if raw:
+        try:
+            data = json.loads(raw)
+        except Exception:
+            # If stored value is not JSON, return as raw string under 'raw'
+            return {"session_id": session_id, "raw": raw}
+        # ensure updated_ts exists
+        if isinstance(data, dict) and "updated_ts" not in data:
+            data["updated_ts"] = time.time()
+        return data
+    # Not found: return minimal object (keeps UI stable)
+    return {"session_id": session_id, "protocol_id": None, "fields": {}, "transcript": [], "updated_ts": time.time()}
+
+
+@router.post("/save", response_model=Dict[str, Any])
+async def save_session(request: Request, payload: SessionModel = Body(...), ttl: Optional[int] = DEFAULT_TTL):
+    """
+    Save or update a session. Stores the JSON representation under the configured Redis key.
+    TTL is set to `ttl` seconds (default configured).
+    """
+    r = request.app.state.redis
+    key = _session_key(payload.session_id)
+    obj = payload.dict()
+    obj["updated_ts"] = time.time()
+    try:
+        r.setex(key, int(ttl), json.dumps(obj))
+    except TypeError:
+        # Some Redis clients expect bytes/str, fallback to plain set then expire
+        r.set(key, json.dumps(obj))
+        r.expire(key, int(ttl))
+    return {"ok": True, "session_id": payload.session_id}
+
+
+@router.get("/logs", response_model=List[Dict[str, Any]])
+async def get_logs(request: Request, session_id: str, start: int = 0, end: int = -1):
+    """
+    Return log entries for a session. Uses Redis list semantics (LRANGE start end).
+    Each entry is expected to be JSON; non-JSON entries are returned as {'raw': <value>}
+    """
+    r = request.app.state.redis
+    key = _log_key(session_id)
+    try:
+        entries = r.lrange(key, start, end)
+    except Exception:
+        # Some redis clients expect bytes -> decode or fall back
+        entries = r.lrange(key, start, end)
+    out = []
+    for e in entries:
+        try:
+            out.append(json.loads(e))
+        except Exception:
+            out.append({"raw": e})
+    return out
+
+
+@router.post("/log", response_model=Dict[str, Any])
+async def append_log(request: Request, session_id: str, entry: LogEntry = Body(...)):
+    """
+    Append a log entry for a session. The entry is JSON-serialized and pushed to the log list.
+    """
+    r = request.app.state.redis
+    key = _log_key(session_id)
+    e = entry.dict()
+    if e.get("ts") is None:
+        e["ts"] = time.time()
+    try:
+        r.rpush(key, json.dumps(e))
+    except Exception:
+        # fallback: try pushing raw string
+        r.rpush(key, str(e))
+    return {"ok": True, "session_id": session_id, "log_event": e.get("event")}
+
+
+# Optional helper endpoint: delete session (useful in tests)
+@router.post("/delete", response_model=Dict[str, Any])
+async def delete_session(request: Request, session_id: str):
+    """
+    Delete session and its logs. Intended for testing/cleanup.
+    """
+    r = request.app.state.redis
+    s_key = _session_key(session_id)
+    l_key = _log_key(session_id)
+    r.delete(s_key)
+    r.delete(l_key)
+    return {"ok": True, "session_id": session_id}
+
+
+# Notes:
+# - This template uses request.app.state.redis which must be configured in the FastAPI app lifespan
+#   (e.g. in apps.api.main.py the Redis client is attached to app.state.redis).
+# - If your Redis client API differs (async vs sync), adapt r.get/r.setex/r.lrange/r.rpush accordingly.
+# - Adjust redis key prefixes and router_prefix by rendering this template with the desired values.

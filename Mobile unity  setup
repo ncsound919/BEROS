@@ -1,0 +1,56 @@
+using UnityEngine;
+using UnityEngine.InputSystem; // New Input System for touch
+using Fusion;
+
+public class PlayerController : NetworkBehaviour
+{
+    [Header("Mobile Movement")]
+    public float moveSpeed = 5f;
+    public float jumpForce = 8f;
+    public Joystick virtualJoystick; // Assign from Easy Touch Controls asset
+
+    private Rigidbody rb;
+    private Vector2 touchInput;
+
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!HasInputAuthority) return;
+
+        // Touch input fallback to keyboard for PC testing
+        touchInput = virtualJoystick != null ? virtualJoystick.Direction : new Vector2(
+            Keyboard.current.aKey.isPressed ? -1 : Keyboard.current.dKey.isPressed ? 1 : 0,
+            Keyboard.current.sKey.isPressed ? -1 : Keyboard.current.wKey.isPressed ? 1 : 0
+        );
+
+        Vector3 move = new Vector3(touchInput.x, 0, touchInput.y) * moveSpeed;
+        rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
+
+        // Tap to jump/interact (adapt for mobile buttons)
+        if (Mouse.current.leftButton.wasPressedThisFrame || Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+        {
+            if (IsGrounded()) rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            else Interact(); // Hold for interact if needed
+        }
+    }
+
+    void Interact()
+    {
+        // Same as before: Water/harvest nearby plots
+        Collider[] hits = Physics.OverlapSphere(transform.position, 3f);
+        foreach (var hit in hits)
+        {
+            if (hit.TryGetComponent<FarmPlot>(out var plot))
+            {
+                plot.Water(); // Or harvest if ready
+                break;
+            }
+        }
+    }
+
+    bool IsGrounded() => Physics.Raycast(transform.position, Vector3.down, 1.1f);
+}

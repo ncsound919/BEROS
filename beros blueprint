@@ -1,0 +1,186 @@
+{
+  "beros_game_blueprint": {
+    "version": "1.0.0",
+    "target_platforms": ["Android", "iOS", "Windows", "Mac"],
+    "framework": ".NET 9 MAUI + SkiaSharp.Views.Maui.Controls + Microsoft.AspNetCore.SignalR.Client",
+    "nuget_packages": [
+      "SkiaSharp.Views.Maui.Controls",
+      "SkiaSharp.Views.Maui",
+      "Microsoft.AspNetCore.SignalR.Client",
+      "CommunityToolkit.Mvvm",
+      "Plugin.Maui.Audio"
+    ],
+    "project_creation": "dotnet new maui -n BEROS.Mobile --dotnet9",
+    "setup_notes": "Place all assets in Resources/Raw/assets/ folder (Maui auto-embeds). Use SkBitmap.Decode(stream) to load PNGs.",
+    "game_loop_fps": 60,
+    "tile_size": 32,
+    "screen_resolution": "Portrait: 720x1280 (scale to device)"
+  },
+  "assets": {
+    "sprites": {
+      "gummy_bears": {
+        "brown": {
+          "idle": "https://opengameart.org/sites/default/files/randomsprites.png (extract brown bear, recolor in code)",
+          "walk": "https://kenney.nl/assets/platformer-art-pixel-redux (farmer recolor to brown)",
+          "size": 32,
+          "frames": 4,
+          "color": "#8B4513"
+        },
+        "pink": {
+          "idle": "Use brown base, tint #FF69B4",
+          "walk": "Same"
+        },
+        "blue": {
+          "idle": "Use brown base, tint #4169E1",
+          "walk": "Same"
+        }
+      },
+      "tractor": {
+        "brown": "https://opengameart.org/content/tractor-png",
+        "pink": "Tint above #FF69B4",
+        "blue": "Tint #4169E1",
+        "size": 48,
+        "source": "https://opengameart.org/content/tractor-png (CC0)"
+      },
+      "crops": {
+        "apple_tree": {
+          "stages": ["seed", "sapling", "tree_small", "tree_full", "ready"],
+          "source": "https://craftpix.net/freebies/free-pixel-art-plants-for-farm/ (apple-like)"
+        },
+        "cotton_candy": {
+          "stages": ["fluff_seed", "pink_bush", "full_cloud", "harvest"],
+          "source": "https://kenney.nl/assets/platformer-art-candy (cloud recolor pink)"
+        },
+        "lollipop": {
+          "stages": ["stick", "swirl_growing", "full_tree"],
+          "source": "https://www.pngwing.com/en/free-png-dlddr (pixel lollipop)"
+        }
+      },
+      "racetrack": {
+        "rainbow_road": {
+          "tiles": ["straight", "curve_left", "curve_right", "boost_pad"],
+          "source": "https://mr-charlie.itch.io/racetrack-pixel-art-tileset-tilemap (tint rainbow) or https://free-game-assets.itch.io/free-race-track-tile-set"
+        },
+        "powerups": {
+          "speed_boost": "Rainbow trail particle",
+          "rainbow_trail": "Gradient line",
+          "bunny_summon": "Pink bunny hop sprite from Kenney"
+        }
+      },
+      "ui": {
+        "joystick_base": "Circle gradient (code-generated)",
+        "interact_btn": "Rainbow watering can icon 64x64"
+      },
+      "particles": {
+        "water": "Rainbow splashes (code: HSV rainbow circles)",
+        "harvest": "Sparkle stars (yellow/gold)",
+        "boost": "Rainbow trail lines"
+      },
+      "backgrounds": {
+        "orchard": "https://craftpix.net/freebies/free-pixel-art-plants-for-farm/ tiles",
+        "cotton": "Pink grass tiles from Kenney Candy",
+        "lollipop": "Swirl paths"
+      }
+    },
+    "audio": {
+      "water_splash": "https://opengameart.org/content/512-sound-effects-8-bit-style (splash var)",
+      "harvest_chime": "https://freesound.org/people/LittleRobotSoundFactory/packs/16681/ (coin/pickup)",
+      "race_start": "Engine rev 8-bit",
+      "boost": "Whoosh short",
+      "source_pack": "https://maskedsound.itch.io/8-bit-sfx-pack (free 100 SFX WAV/OGG)"
+    },
+    "fonts": {
+      "pixel": "https://kenney.nl/assets/pixel-ui-pack (included PNG font or use SKTypeface)"
+    }
+  },
+  "glue_code": {
+    "load_asset": "// In MainPage.cs\nprivate SKBitmap LoadAsset(string name) {\n  using var stream = FileSystem.OpenAppPackageFileAsync($\"assets/{name}.png\").Result;\n  return SKBitmap.Decode(stream);\n}",
+    "draw_sprite": "// In OnPaintSurface\ncanvas.DrawBitmap(playerSprite, playerPos);",
+    "joystick": "// Touch handler\nprivate float joyX, joyY;\nvoid OnTouch(SKTouchEventArgs e) {\n  joyX = (e.Location.X / 100f) - 0.5f; // Normalize\n  joyY = 1f - (e.Location.Y / 100f) - 0.5f;\n}",
+    "particles": "List<Particle> particles = new();\nclass Particle { SKPoint pos; float life; }\n// Update: pos += velocity; life--;\n// Draw: foreach(var p in particles.Where(l=>l.life>0)) canvas.DrawCircle(p.pos, 3, rainbowPaint);",
+    "rainbow_gradient": "SKShader rainbow = SKShader.CreateSweepGradient(new SKPoint(0,0), new[] {SKColors.Red, SKColors.Orange, ...}); paint.Shader = rainbow;",
+    "audio": "var audio = AudioManager.Current;\naudio.Play(\"water_splash.ogg\");",
+    "signalr_sync": "// Server broadcast player pos, crop growth\n_hub.SendAsync(\"UpdateState\", JsonSerializer.Serialize(state));"
+  },
+  "coding_tips": {
+    "performance": [
+      "InvalidateSurface() only on changes (use flags: moved, watered, etc.)",
+      "Cache bitmaps/SKPaint globally",
+      "Limit particles to 100, update off-main thread if needed",
+      "Use SKPicture for complex static elements (crops)",
+      "60FPS: Timer(16ms) or AnimationTimer"
+    ],
+    "skiasharp": [
+      "AntiAlias = true for smooth",
+      "canvas.Scale(1f / pixelRatio) for device scaling",
+      "SKPath for curves (lollipop swirls)",
+      "Text: canvas.DrawText(\"Sparkles: 100\", 10, 30, textPaint); Use monospace font"
+    ],
+    "mobile": [
+      "Touch: EnableTouchEvents=true, handle PointerEntered/Exited/Moved",
+      "Safe zones: Get status bar height via DeviceInfo",
+      "Battery: Pause loop when backgrounded (Page LifeCycle)",
+      "AOT: Mark methods [UnconditionalSuppressMessage] for trimmer"
+    ],
+    "multiplayer": [
+      "Sync delta only (pos change >0.1f)",
+      "Server authoritative: Validate moves, broadcast",
+      "Room: Groups.AddToGroup(\"GUMMY123\")"
+    ]
+  },
+  "game_mechanics": {
+    "movement": {
+      "speed": 5,
+      "sprint": 7.5,
+      "touch_deadzone": 0.1,
+      "code": "player.X += joyX * speed * deltaTime;"
+    },
+    "farming": {
+      "growth_rate": 0.01,
+      "watered_accel": 2.0,
+      "harvest_radius": 80,
+      "sparkles_reward": 15,
+      "stages": 5,
+      "update": "growth += (watered ? accel : 1f) * rate * delta;"
+    },
+    "racing": {
+      "max_players": 8,
+      "boost_recharge": 3,
+      "powerups_spawn": "Every 5s random tile",
+      "lap_length": 1000,
+      "code": "tractorSpeed = Mathf.Lerp(speed, maxSpeed, accel * 0.1f);"
+    },
+    "economy": {
+      "sparkles": "Earn: harvest(10-20), race(50/win)",
+      "magic_keys": "Race win(1), level up(5)",
+      "unlock_secret": "keys >=3"
+    },
+    "progression": {
+      "farm_level": "XP quadratic: level = sqrt(XP/100); max 50",
+      "race_ranks": ["beginner", "novice", "expert", "champion"],
+      "rewards": "New tools at 10/25/50"
+    },
+    "zones": {
+      "orchard_garden": {"owner": "brown", "plots": 6},
+      "cotton_candy_fields": {"owner": "pink", "plots": 6},
+      "lollipop_forest": {"owner": "blue", "plots": 6},
+      "rainbow_racetrack": {"capacity": 8}
+    }
+  },
+  "zones_data": {
+    "spawn_points": {
+      "orchard": {"x": 100, "y": 100},
+      "racetrack": {"x": 50, "y": 600}
+    }
+  },
+  "full_integration_guide": [
+    "1. Create MAUI proj, add NuGets",
+    "2. Download assets to Resources/Raw/assets/ (flatten PNGs)",
+    "3. Copy MainPage.xaml + .cs from prev",
+    "4. Add Player/FarmPlot classes with OnPropertyChanged",
+    "5. Implement Update(deltaTime) in PaintSurface before draw",
+    "6. Server: dotnet new web -n BEROS.Server, add SignalR Hub",
+    "7. Build: dotnet publish -f net9.0-android",
+    "8. Test LAN: ngrok http 5000 for public IP"
+  ]
+}

@@ -1,0 +1,21 @@
+task_id: generate_urban_platformer
+files:
+  - template: pygame_platformer_main.py.j2
+    output: urban_platformer/main.py
+    context:
+      game_name: "Urban Beats Platformer"
+  - template: pygame_game.spec.j2
+    output: urban_platformer/build.spec
+    context:
+      app_name: "UrbanBeatsPlatformer"
+      script_name: "main.py"
+      file_description: "Urban hip-hop themed platformer game"
+      console: false
+      onefile: true
+      script_name: "C:/Users/tap45/Documents/Overlay Projects/Overlay Open Source/AutoCoder-Forge-Basic/out/urban_platformer/main.py"
+  - template: game_readme.md.j2
+    output: urban_platformer/README.md
+    context:
+      project_name: "Urban Beats Platformer"
+      description: "An urban hip-hop themed platformer where you jump across rooftops, collect beats, and avoid obstacles."
+build_command: "C:\\Users\\tap45\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\pyinstaller.exe \"C:\\Users\\tap45\\Documents\\Overlay Projects\\Overlay Open Source\\AutoCoder-Forge-Basic\\out\\urban_platformer\\build.spec\""

@@ -1,0 +1,12 @@
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSignalR();
+
+var app = builder.Build();
+app.MapHub<Ber osHub>("/beros");
+app.Run("http://0.0.0.0:5000"); // Private server
+
+public class BerosHub : Hub
+{
+    public async Task JoinRoom(string room) => await Groups.AddToGroupAsync(Context.ConnectionId, room);
+    public async Task BroadcastState(string state) => await Clients.OthersInGroup("GUMMY123").SendAsync("UpdateState", state);
+}

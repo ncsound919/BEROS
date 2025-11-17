@@ -1,0 +1,26 @@
+extends RigidBody2D
+
+# Projectile script for Urban Slingshot Fury
+
+@export var damage = 50
+var launched = false
+
+func _ready():
+    pass
+
+func _physics_process(delta):
+    if launched:
+        # Add any effects like trail or rotation
+        pass
+
+func _on_body_entered(body):
+    if body.is_in_group("targets"):
+        body.take_damage(damage)
+        queue_free()
+    elif body.is_in_group("ground") or body.is_in_group("obstacles"):
+        queue_free()
+
+# Add explosion effect or sound on impact
+func explode():
+    # Instantiate explosion particle or animation
+    pass

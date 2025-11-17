@@ -1,0 +1,39 @@
+extends Node2D
+
+# Main game script - handles overall game logic
+
+@onready var player = $Player
+@onready var camera = $Camera2D
+
+var score = 0
+var lives = 3
+
+func _ready():
+	# Initialize game
+	print("Game started: {{ game_type }}")
+	# Add any initialization code here
+
+func _process(delta):
+	# Update game logic
+	pass
+
+func add_score(points):
+	score += points
+	print("Score: ", score)
+
+func lose_life():
+	lives -= 1
+	if lives <= 0:
+		game_over()
+
+func game_over():
+	print("Game Over")
+	# Handle game over logic
+
+# Add more functions based on game type
+{% if game_type == "platformer" %}
+func spawn_enemy():
+	var enemy = preload("res://enemy.tscn").instantiate()
+	add_child(enemy)
+	enemy.position = Vector2(randf_range(0, 1152), 0)
+{% endif %}

@@ -1,0 +1,14 @@
+{
+  "task_id": "generate_urban_tetris",
+  "generated": [
+    "urban_tetris/main.py",
+    "urban_tetris/README.md"
+  ],
+  "errors": [
+    {
+      "file": "urban_tetris/build.spec",
+      "error": "'icon_file' is undefined"
+    }
+  ],
+  "build_result": 1
+}

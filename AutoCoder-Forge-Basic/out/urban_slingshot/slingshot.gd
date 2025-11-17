@@ -1,0 +1,41 @@
+extends Node2D
+
+# Slingshot script for Urban Slingshot Fury
+
+@onready var projectile_holder = $ProjectileHolder
+@onready var aim_line = $Line2D
+
+var attached_projectile = null
+var aim_start_pos = Vector2()
+var max_pull_distance = 200.0
+
+func _ready():
+	aim_line.visible = false
+
+func start_aim(mouse_pos):
+	if attached_projectile:
+		aim_start_pos = mouse_pos
+		aim_line.visible = true
+		update_aim_line(mouse_pos)
+
+func update_aim_line(mouse_pos):
+	if attached_projectile and aim_line.visible:
+		var pull_vector = aim_start_pos - mouse_pos
+		var pull_distance = min(pull_vector.length(), max_pull_distance)
+		var normalized_pull = pull_vector.normalized() * pull_distance
+		aim_line.points = [Vector2(0, 0), normalized_pull]
+
+func calculate_force(release_pos):
+	var pull_vector = aim_start_pos - release_pos
+	var pull_distance = min(pull_vector.length(), max_pull_distance)
+	var force = pull_vector.normalized() * pull_distance * 10  # Adjust multiplier for force
+	return force
+
+func attach_projectile(projectile):
+	attached_projectile = projectile
+	projectile.position = position
+	aim_line.visible = false
+
+func _process(delta):
+	if attached_projectile and aim_line.visible:
+		update_aim_line(get_viewport().get_mouse_position())

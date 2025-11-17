@@ -1,0 +1,27 @@
+task_id: generate_session_endpoint
+description: >
+  Generate a FastAPI session router using the Jinja2 template `session_endpoint.py.j2`.
+  The generated file will be written into the main project routers directory so the
+  Agent UI and other services can fetch and persist session data in Redis.
+
+# Optional metadata for bookkeeping
+author: AutoCoder
+created_by: autocoder_task
+created_at: 2024-10-29T00:00:00Z
+
+files:
+  - template: session_endpoint.py.j2
+    # Output path is relative to AutoCoder OUT_DIR. Using ../../apps/... resolves
+    # to the repository's apps/api/routers directory from AutoCoder-Forge-Basic/out/.
+    output: ../../apps/api/routers/session.py
+    context:
+      router_prefix: "/session"
+      redis_session_prefix: "session:"
+      redis_log_prefix: "log:"
+      default_ttl: 1800
+
+notes:
+  - The generated router will expose endpoints under the configured router_prefix.
+  - Ensure `apps.api.main` includes this router (e.g., app.include_router(session.router, prefix="/api/v1")).
+  - If your Redis client is async, adjust the template or generated code accordingly.
+  - After generation, format the code with `black` and run backend tests.

@@ -1,0 +1,92 @@
+task_id: marathon_build_complete_system
+description: >
+  Simplified marathon build to complete AetherDesk system with essential components only.
+  Generates critical missing pieces: backend tests, Docker stack, and deployment configs.
+
+author: AutoCoder Marathon
+created_by: simplified_marathon
+created_at: 2024-10-29T14:00:00Z
+priority: high
+
+files:
+  # 1. Backend health endpoint
+  - template: health_endpoint.py.j2
+    output: ../../apps/api/routers/health.py
+    context:
+      include_redis_check: true
+      include_version: "0.2"
+      check_dependencies: true
+
+  # 2. pytest configuration
+  - template: pytest_ini.j2
+    output: ../../pytest.ini
+    context:
+      testpaths: "apps/api/tests"
+      python_files: "test_*.py"
+      addopts: "-v --tb=short --strict-markers"
+      markers:
+        - "unit: Unit tests"
+        - "integration: Integration tests"
+        - "slow: Slow tests"
+
+  # 3. Backend test fixtures (conftest)
+  - template: conftest.py.j2
+    output: ../../apps/api/tests/conftest.py
+    context:
+      use_fakeredis: true
+      create_test_client: true
+
+  # 4. Test for queue operations
+  - template: test_queue.py.j2
+    output: ../../apps/api/tests/test_queue.py
+    context:
+      test_redis: true
+
+  # 5. Test for session endpoint
+  - template: test_session.py.j2
+    output: ../../apps/api/tests/test_session.py
+    context:
+      endpoint_prefix: "/api/v1/session"
+
+  # 6. Docker Compose for full stack
+  - template: docker_compose.yml.j2
+    output: ../../docker-compose.yml
+    context:
+      services:
+        - redis
+        - backend
+        - frontend
+      redis_version: "7-alpine"
+      backend_port: 8000
+      frontend_port: 5173
+      include_volumes: true
+      include_networks: true
+
+  # 7. Backend Dockerfile
+  - template: dockerfile_backend.j2
+    output: ../../Dockerfile.backend
+    context:
+      python_version: "3.10"
+      port: 8000
+
+  # 8. Frontend Dockerfile
+  - template: dockerfile_frontend.j2
+    output: ../../Dockerfile.frontend
+    context:
+      node_version: "18-alpine"
+      nginx_version: "alpine"
+
+  # 9. Makefile for automation
+  - template: makefile.j2
+    output: ../../Makefile
+    context:
+      project_name: "aetherdesk"
+
+notes:
+  - Generates 9 essential files for complete deployment
+  - After generation run: docker-compose up --build
+  - Backend tests require: pip install fakeredis pytest-asyncio
+  - Frontend must be built before Docker: cd agent-ui && npm run build
+
+completion_target: "95%"
+estimated_time: "20 seconds"

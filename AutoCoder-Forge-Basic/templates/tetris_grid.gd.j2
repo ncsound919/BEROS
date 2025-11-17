@@ -1,0 +1,49 @@
+extends Node2D
+
+# Grid script for Urban Block Stack
+
+const GRID_WIDTH = 10
+const GRID_HEIGHT = 20
+const CELL_SIZE = 32
+
+var grid = []
+
+func _ready():
+	initialize_grid()
+
+func initialize_grid():
+	grid = []
+	for y in range(GRID_HEIGHT):
+		grid.append([])
+		for x in range(GRID_WIDTH):
+			grid[y].append(false)
+
+func is_occupied(x, y):
+	if x < 0 or x >= GRID_WIDTH or y < 0 or y >= GRID_HEIGHT:
+		return true
+	return grid[y][x]
+
+func set_occupied(x, y, occupied):
+	if x >= 0 and x < GRID_WIDTH and y >= 0 and y < GRID_HEIGHT:
+		grid[y][x] = occupied
+
+func is_line_full(y):
+	for x in range(GRID_WIDTH):
+		if not grid[y][x]:
+			return false
+	return true
+
+func clear_line(y):
+	for x in range(GRID_WIDTH):
+		grid[y][x] = false
+
+func copy_line(from_y, to_y):
+	for x in range(GRID_WIDTH):
+		grid[to_y][x] = grid[from_y][x]
+
+func draw_grid():
+	# Optional: draw the grid visually
+	pass
+
+func _draw():
+	draw_grid()

@@ -1,0 +1,14 @@
+{
+  "task_id": "generate_urban_platformer",
+  "generated": [
+    "urban_platformer/main.py",
+    "urban_platformer/README.md"
+  ],
+  "errors": [
+    {
+      "file": "urban_platformer/build.spec",
+      "error": "'icon_file' is undefined"
+    }
+  ],
+  "build_result": 1
+}

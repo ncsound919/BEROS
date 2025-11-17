@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>{{ output_type }}</OutputType>
+    <TargetFramework>{{ target_framework }}</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    {% for ref in references %}
+    <Reference Include="{{ ref }}" />
+    {% endfor %}
+  </ItemGroup>
+
+  <ItemGroup>
+    {% for pkg in packages %}
+    <PackageReference Include="{{ pkg.name }}" Version="{{ pkg.version }}" />
+    {% endfor %}
+  </ItemGroup>
+
+  <ItemGroup>
+    {% for file in files %}
+    <Compile Include="{{ file }}" />
+    {% endfor %}
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,110 @@
+task_id: build_finai_hub
+description: >
+  Build the FinAI Hub platform, a FinTech AI-powered investment platform integrating Kronos for predictions,
+  DocsGPT for document analysis, Goose for automation, Laddr for investment ladders, and Vutuv for social networking.
+  Generates API endpoints, Docker setup, and frontend components for a complete system.
+
+author: AutoCoder
+created_by: finai_hub_build
+created_at: 2024-10-30T12:00:00Z
+priority: high
+
+files:
+  # 1. Kronos prediction API endpoint
+  - template: kronos_predict_endpoint.py.j2
+    output: ../../apps/api/routers/kronos.py
+    context:
+      endpoint_prefix: "/api/v1/kronos"
+      model_path: "NeoQuasar/Kronos-small"
+      tokenizer_path: "NeoQuasar/Kronos-Tokenizer-base"
+
+  # 2. DocsGPT document analysis endpoint
+  - template: docsgpt_query_endpoint.py.j2
+    output: ../../apps/api/routers/docsgpt.py
+    context:
+      endpoint_prefix: "/api/v1/docsgpt"
+      vector_store_path: "./vectorstore"
+
+  # 3. Goose automation endpoint
+  - template: goose_automation_endpoint.py.j2
+    output: ../../apps/api/routers/goose.py
+    context:
+      endpoint_prefix: "/api/v1/goose"
+      mcp_server_url: "http://localhost:3000"
+
+  # 4. Laddr investment ladder endpoint
+  - template: laddr_ladder_endpoint.py.j2
+    output: ../../apps/api/routers/laddr.py
+    context:
+      endpoint_prefix: "/api/v1/laddr"
+
+  # 5. Vutuv social network endpoint
+  - template: vutuv_social_endpoint.py.j2
+    output: ../../apps/api/routers/vutuv.py
+    context:
+      endpoint_prefix: "/api/v1/vutuv"
+
+  # 6. Main API app with router includes
+  - template: main_app.py.j2
+    output: ../../apps/api/main.py
+    context:
+      routers:
+        - health
+        - kronos
+        - docsgpt
+        - goose
+        - laddr
+        - vutuv
+
+  # 7. Docker Compose for FinAI Hub
+  - template: docker_compose.yml.j2
+    output: ../../docker-compose.yml
+    context:
+      services:
+        - redis
+        - backend
+        - frontend
+        - kronos_service
+        - docsgpt_service
+      redis_version: "7-alpine"
+      backend_port: 8000
+      frontend_port: 3000
+      include_volumes: true
+      include_networks: true
+
+  # 8. Backend Dockerfile
+  - template: dockerfile_backend.j2
+    output: ../../Dockerfile.backend
+    context:
+      python_version: "3.10"
+      port: 8000
+
+  # 9. Frontend Dockerfile (React-based)
+  - template: dockerfile_frontend.j2
+    output: ../../Dockerfile.frontend
+    context:
+      node_version: "18-alpine"
+      nginx_version: "alpine"
+
+  # 10. pytest configuration
+  - template: pytest_ini.j2
+    output: ../../pytest.ini
+    context:
+      testpaths: "apps/api/tests"
+      python_files: "test_*.py"
+      addopts: "-v --tb=short --strict-markers"
+
+  # 11. Makefile for automation
+  - template: makefile.j2
+    output: ../../Makefile
+    context:
+      project_name: "finai_hub"
+
+notes:
+  - Generates API integrations for all tools in the FinTech sector
+  - After generation, run: docker-compose up --build
+  - Requires pre-built tool services (Kronos, DocsGPT, etc.) or integrate directly
+  - Frontend assumes a React app in finai-frontend directory
+
+completion_target: "100%"
+estimated_time: "30 seconds generation + 10 minutes build"
