@@ -7,11 +7,16 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   # Build .NET Console version
   build-dotnet-console:
     name: Build .NET 8 Console Game
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
@@ -23,7 +28,7 @@ jobs:
       - name: Create Console Project
         run: |
           dotnet new console -n BEROS.Console -o ./build/console
-          cp Mainfile ./build/console/Program.cs
+          cp ConsoleGame.cs ./build/console/Program.cs
       
       - name: Build Console Game
         run: |
@@ -46,6 +51,8 @@ jobs:
   build-maui-android:
     name: Build MAUI Android
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
@@ -75,6 +82,8 @@ jobs:
   build-python-agent:
     name: Build Python Game Agent
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
@@ -107,6 +116,8 @@ jobs:
   audit-and-document:
     name: Audit Build Steps
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
