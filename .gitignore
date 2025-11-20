@@ -3,3 +3,11 @@ bin/
 obj/
 *.user
 *.tmp
+
+# Build artifacts
+build/
+artifacts/
+test_build/
+
+# Build reports
+build-agent-report.txt
