@@ -335,7 +335,7 @@ Progress through racing leagues:
 
 ### Local Multiplayer
 
-BEROS supports local multiplayer through the SignalR server.
+BEROS currently ships as a single-player experience; multiplayer support via SignalR is planned for a future update.
 
 ### Setting Up a Game
 
