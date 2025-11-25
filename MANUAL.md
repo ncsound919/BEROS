@@ -82,7 +82,7 @@ When you launch BEROS, you'll see the title screen and be spawned in the **Orcha
 | `E` | Interact | Water crops or harvest ready plants |
 | `F` | Special Ability | Use your bear's unique power |
 | `R` | Enter Race | Join or start a race (when at racetrack) |
-| `Space` | Jump | Jump over obstacles |
+| `Space` | (unused) | Not currently assigned |
 | `Q` | Quit | Exit the game |
 
 ### Mobile Controls
