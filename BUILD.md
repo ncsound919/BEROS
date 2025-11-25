@@ -6,8 +6,8 @@ Complete guide for building BEROS (Gummy Bear Farming & Racing) game across all 
 
 1. [Prerequisites](#prerequisites)
 2. [Quick Start](#quick-start)
-3. [Platform-Specific Builds](#platform-specific-builds)
-4. [Build Automation](#build-automation)
+3. [Android Build](#android-build)
+4. [Platform-Specific Builds](#platform-specific-builds)
 5. [CI/CD Pipeline](#cicd-pipeline)
 6. [Troubleshooting](#troubleshooting)
 
@@ -18,96 +18,142 @@ Complete guide for building BEROS (Gummy Bear Farming & Racing) game across all 
 ### Core Requirements
 
 - **Git** - Version control
-- **.NET 8 SDK** - For console and MAUI builds
+- **.NET 10 SDK** - For console and MAUI builds
   - Download: https://dotnet.microsoft.com/download
   - Verify: `dotnet --version`
 
-### Platform-Specific Requirements
+### Android Build Requirements
 
-#### .NET Console (All Platforms)
-- .NET 8 SDK (required)
+- .NET 10 SDK
+- MAUI Android Workload
+  ```bash
+  dotnet workload install maui-android
+  ```
+- Java Development Kit (JDK 17+)
+  - On Ubuntu: `sudo apt install openjdk-17-jdk`
+
+### .NET Console (All Platforms)
+- .NET 10 SDK (required)
 - No additional dependencies
 
-#### MAUI Mobile (Android/iOS)
-- .NET 8 SDK (required)
-- MAUI Workload
-  ```bash
-  dotnet workload install maui
-  ```
-- **Android:**
-  - Android SDK (API 21+)
-  - Java Development Kit (JDK 11+)
-  
-- **iOS:**
-  - macOS with Xcode 14+
-  - Apple Developer Account (for device deployment)
-
-#### Unity (Optional)
-- Unity 2021.3 LTS or newer
-- Unity Hub recommended
-- Android/iOS build support modules
-
-#### Python Game Agent
+### Python Game Agent
 - Python 3.8+
-- Pip package manager
 
 ---
 
 ## Quick Start
 
-### Automated Build (Recommended)
-
-Run the automated build script:
+### Build Android APK (Recommended)
 
 ```bash
-./build.sh
+# Navigate to mobile project
+cd BEROS.Mobile
+
+# Restore dependencies
+dotnet restore
+
+# Build Debug APK
+dotnet build -f net10.0-android -c Debug
+
+# Build Release APK
+dotnet publish -f net10.0-android -c Release -p:AndroidPackageFormat=apk
 ```
 
-This will:
-1. Build .NET Console version
-2. Check MAUI prerequisites
-3. Run Python game agent audit
-4. Generate build report
+The APK will be in: `BEROS.Mobile/bin/Release/net10.0-android/publish/`
 
-### Manual Build - .NET Console
+### Build Console Version
 
 ```bash
 # Create project
-dotnet new console -n BEROS.Console
+dotnet new console -n BEROS.Console -o ./build/console
 
 # Copy game code
-cp Mainfile BEROS.Console/Program.cs
+cp ConsoleGame.cs ./build/console/Program.cs
 
 # Build
-cd BEROS.Console
+cd ./build/console
 dotnet build -c Release
 
 # Run
 dotnet run -c Release
 ```
 
-### Python Game Agent
+---
+
+## Android Build
+
+### Project Structure
+
+The Android app is in the `BEROS.Mobile/` directory:
+
+```
+BEROS.Mobile/
+├── App.xaml                    # Application resources
+├── App.xaml.cs                 # Application entry point
+├── AppShell.xaml               # Navigation shell
+├── BEROS.Mobile.csproj         # Project file (Android target)
+├── MainPage.xaml               # Game UI layout
+├── MainPage.xaml.cs            # Game logic with SkiaSharp
+├── MauiProgram.cs              # MAUI configuration
+├── Platforms/
+│   └── Android/
+│       ├── AndroidManifest.xml # Android permissions
+│       ├── MainActivity.cs     # Android activity
+│       └── MainApplication.cs  # Android application
+└── Resources/                  # App resources (icons, fonts, etc.)
+```
+
+### Build Commands
 
 ```bash
-# Run audit
-python3 beros_game.py
+# Debug build (for development/testing)
+cd BEROS.Mobile
+dotnet build -f net10.0-android -c Debug
 
-# The agent will:
-# - Audit project structure
-# - Check build prerequisites
-# - Generate recommendations
-# - Create build-agent-report.txt
+# Release build (for distribution)
+dotnet publish -f net10.0-android -c Release -p:AndroidPackageFormat=apk
+
+# Build signed APK for Play Store
+dotnet publish -f net10.0-android -c Release \
+  -p:AndroidPackageFormat=aab \
+  -p:AndroidKeyStore=true \
+  -p:AndroidSigningKeyStore=mykey.keystore \
+  -p:AndroidSigningKeyAlias=mykey \
+  -p:AndroidSigningKeyPass=password \
+  -p:AndroidSigningStorePass=password
+```
+
+### Game Features
+
+- **SkiaSharp** canvas-based 2D rendering at 60 FPS
+- Touch controls with virtual joystick
+- Farm plots with watering and harvesting mechanics
+- Gummy bear character with animations
+- Rainbow particle effects
+- Zone-based gameplay (Orchard Garden, Rainbow Racetrack)
+
+### Install on Device
+
+```bash
+# Enable USB debugging on your Android device
+# Connect device via USB
+
+# List connected devices
+adb devices
+
+# Install APK
+adb install BEROS.Mobile/bin/Release/net10.0-android/publish/com.beros.mobile-Signed.apk
 ```
 
 ---
 
 ## Platform-Specific Builds
 
-### 1. .NET 8 Console Game
+### 1. .NET Console Game
 
 **Target Platforms:** Windows, macOS, Linux
 
-**File:** `Mainfile` (contains complete game code)
+**File:** `ConsoleGame.cs` (contains complete game code)
 
 #### Build Steps:
 
@@ -118,7 +164,7 @@ cd build/console
 dotnet new console -n BEROS.Console
 
 # Copy game code
-cp ../../Mainfile Program.cs
+cp ../../ConsoleGame.cs Program.cs
 
 # Restore dependencies
 dotnet restore
@@ -138,65 +184,44 @@ dotnet run -c Release
 - `Q` - Quit
 
 #### Build Output:
-- `bin/Release/net8.0/BEROS.Console.dll`
-- `bin/Release/net8.0/BEROS.Console.exe` (Windows)
+- `bin/Release/net10.0/BEROS.Console.dll`
+- `bin/Release/net10.0/BEROS.Console.exe` (Windows)
 
 ---
 
-### 2. MAUI Mobile (Android/iOS)
+### 2. MAUI Mobile (Android)
 
-**Target Platforms:** Android, iOS
+**Target Platform:** Android (API 21+)
 
-**File:** `dotnet BEROS` (contains MAUI + SkiaSharp implementation)
+**Directory:** `BEROS.Mobile/` (complete MAUI project)
 
-#### Setup Steps:
+#### Build Steps:
 
 ```bash
-# Install MAUI workload
-dotnet workload install maui
-
-# Create MAUI project
-dotnet new maui -n BEROS.Mobile
+# Navigate to project
 cd BEROS.Mobile
 
-# Add required packages
-dotnet add package SkiaSharp.Views.Maui.Controls
-dotnet add package SkiaSharp.Views.Maui
-dotnet add package Microsoft.AspNetCore.SignalR.Client
-dotnet add package CommunityToolkit.Mvvm
-dotnet add package Plugin.Maui.Audio
-```
+# Restore packages
+dotnet restore
 
-#### Integrate Game Code:
-
-1. Replace `MainPage.xaml.cs` content with code from `dotnet BEROS` file
-2. Add game assets to `Resources/Raw/assets/` folder
-3. Configure XAML UI from provided template
-
-#### Build Android:
-
-```bash
 # Debug build
-dotnet build -f net8.0-android
+dotnet build -f net10.0-android -c Debug
 
-# Release build (requires signing)
-dotnet publish -f net8.0-android -c Release
+# Release build (APK)
+dotnet publish -f net10.0-android -c Release -p:AndroidPackageFormat=apk
 
-# Install to connected device
-adb install bin/Release/net8.0-android/publish/com.beros.mobile-Signed.apk
+# Release build (AAB for Play Store)
+dotnet publish -f net10.0-android -c Release -p:AndroidPackageFormat=aab
 ```
 
-#### Build iOS:
+#### Install on Device:
 
 ```bash
-# Simulator
-dotnet build -f net8.0-ios -c Release /p:Platform=iPhoneSimulator
+# Install Debug APK
+adb install bin/Debug/net10.0-android/com.beros.mobile-Signed.apk
 
-# Device (requires provisioning profile)
-dotnet build -f net8.0-ios -c Release /p:Platform=iPhone
-
-# Archive for App Store
-# Recommended: Use Fastlane for automated signing and upload
+# Install Release APK
+adb install bin/Release/net10.0-android/publish/com.beros.mobile-Signed.apk
 ```
 
 ---
@@ -344,18 +369,19 @@ Location: `.github/workflows/build.yml`
 **Jobs:**
 
 1. **build-dotnet-console**
-   - Builds .NET 8 console version
+   - Builds .NET 10 console version
    - Runs on Ubuntu
-   - Uploads artifacts
+   - Uploads build artifacts
 
 2. **build-maui-android**
-   - Checks MAUI prerequisites
-   - Generates setup documentation
+   - Builds Android APK using MAUI
+   - Installs Java JDK and MAUI workload
+   - Uploads signed APK as artifact
    - Runs on Ubuntu
 
 3. **build-python-agent**
-   - Tests Python game agent
-   - Runs linting
+   - Runs Python code linting
+   - Executes game agent audit
    - Packages Python code
 
 4. **audit-and-document**
@@ -369,6 +395,9 @@ Location: `.github/workflows/build.yml`
 gh workflow view build.yml
 gh run list
 ```
+
+**Download Android APK:**
+After a successful build, download the APK artifact from GitHub Actions.
 
 ---
 
@@ -385,10 +414,10 @@ dotnet --version
 # https://dotnet.microsoft.com/download
 ```
 
-#### MAUI Workload Missing
+#### MAUI Android Workload Missing
 ```bash
-# Install MAUI
-dotnet workload install maui
+# Install MAUI Android workload
+dotnet workload install maui-android
 
 # Update workloads
 dotnet workload update
@@ -417,14 +446,18 @@ pip install dataclasses  # Only needed for Python < 3.7
 
 #### Android Build Fails
 ```bash
-# Check Android SDK
+# Install MAUI Android workload
+dotnet workload install maui-android
+
+# Repair workload
 dotnet workload repair
 
-# Verify Java
-java -version  # Should be JDK 11+
+# Verify Java (JDK 17+ required for .NET 10)
+java -version
 
-# Check Android SDK location
-echo $ANDROID_HOME
+# Restore packages
+cd BEROS.Mobile
+dotnet restore
 ```
 
 #### iOS Build Fails

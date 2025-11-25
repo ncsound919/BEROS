@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="BEROS.Mobile.MainPage"
+             Title="BEROS - Gummy Bear Farming">
+
+    <Grid RowDefinitions="Auto,*,Auto" BackgroundColor="#87CEEB">
+        <!-- HUD - Top -->
+        <Grid Grid.Row="0" Padding="10" BackgroundColor="#00000066">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label x:Name="SparklesLabel" Text="✨ Sparkles: 100" TextColor="Gold" FontSize="16" FontAttributes="Bold" Grid.Column="0" />
+            <Label x:Name="ZoneLabel" Text="🏡 Orchard Garden" TextColor="White" FontSize="16" FontAttributes="Bold" Grid.Column="1" HorizontalTextAlignment="End" />
+        </Grid>
+
+        <!-- Game Canvas -->
+        <skia:SKCanvasView x:Name="GameCanvas" 
+                           Grid.Row="1" 
+                           EnableTouchEvents="True"
+                           PaintSurface="OnPaintSurface" 
+                           Touch="OnTouch" />
+
+        <!-- Controls - Bottom -->
+        <Grid Grid.Row="2" Padding="10" BackgroundColor="#00000066">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            
+            <!-- Virtual Joystick Area (Left) -->
+            <Grid Grid.Column="0" WidthRequest="120" HeightRequest="120" HorizontalOptions="Start">
+                <Ellipse Fill="#FFFFFF66" Stroke="White" StrokeThickness="2" />
+                <Label Text="🕹️" FontSize="32" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Grid>
+            
+            <!-- Action Buttons (Right) -->
+            <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                <Button x:Name="InteractBtn" Text="🌈 Water" BackgroundColor="#FF69B4" TextColor="White" Clicked="OnInteract" WidthRequest="100" />
+                <Button x:Name="RaceBtn" Text="🚜 Race" BackgroundColor="#4169E1" TextColor="White" Clicked="OnRace" WidthRequest="100" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+
+</ContentPage>

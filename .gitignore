@@ -11,3 +11,13 @@ test_build/
 
 # Build reports
 build-agent-report.txt
+
+# Android build outputs
+*.apk
+*.aab
+*.keystore
+
+# IDE files
+.idea/
+*.suo
+*.cache
